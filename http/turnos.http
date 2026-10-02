@@ -1,0 +1,50 @@
+### Funciona en IntelliJ (HTTP Client) y en VS Code (extensión REST Client)
+@base = http://localhost:8080
+
+### Hola mundo
+GET {{base}}/hola?nombre=Bootcamp
+
+### Crear turno
+POST {{base}}/api/turnos
+Content-Type: application/json
+
+{
+  "cliente": "Ana Pérez",
+  "servicio": "Corte de pelo",
+  "fechaHora": "2026-10-05T10:30:00"
+}
+
+### Crear otro turno
+POST {{base}}/api/turnos
+Content-Type: application/json
+
+{
+  "cliente": "Bruno Díaz",
+  "servicio": "Consulta nutricional",
+  "fechaHora": "2026-10-04T16:00:00"
+}
+
+### Listar todos
+GET {{base}}/api/turnos
+
+### Filtrar por estado
+GET {{base}}/api/turnos?estado=PENDIENTE
+
+### Obtener uno
+GET {{base}}/api/turnos/1
+
+### Obtener uno que no existe (404)
+GET {{base}}/api/turnos/999
+
+### Reemplazar un turno (PUT)
+PUT {{base}}/api/turnos/1
+Content-Type: application/json
+
+{
+  "cliente": "Ana Pérez",
+  "servicio": "Corte y color",
+  "fechaHora": "2026-10-05T11:00:00"
+}
+
+### Eliminar (204)
+DELETE {{base}}/api/turnos/2
