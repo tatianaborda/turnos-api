@@ -2,6 +2,10 @@ package com.codigofacilito.turnos.model;
 
 import java.time.LocalDateTime;
 
+/**
+ * Recurso principal de la API.
+ * Es un record: inmutable, con equals/hashCode/toString gratis.
+ */
 public record Turno(
         Long id,
         String cliente,

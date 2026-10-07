@@ -1,49 +1,37 @@
-# turnos-api · Clase 1
+# turnos-api · Clase 2
 
-Proyecto que acompaña el Módulo 4 del Bootcamp Backend con Java y Spring (Código Facilito).
-Estado al final de la **Parte 1 (1/10/2026)**: CRUD de turnos en memoria con Spring Web.
+Proyecto del Módulo 4 del Bootcamp Backend con Java y Spring (Código Facilito).
+Estado al final de la **Parte 2 (6/10/2026)**: la API consulta feriados en una API externa, devuelve errores estandarizados con ProblemDetail y tiene dos versiones de sus endpoints de lectura.
 
-## Requisitos
-- Java 21 o superior (Java 25 también funciona)
-- Maven 3.9+ (o generá el wrapper con `mvn wrapper:wrapper`)
-- Spring Boot 4.1.x (si hay un patch más nuevo en start.spring.io, actualizá la versión del `pom.xml`)
+## Novedades respecto de la Clase 1
+- **Consumo de APIs:** `FeriadosRestClient` (RestClient imperativo, para comparar) y `FeriadosClient` (interfaz `@HttpExchange`, la que usa el servicio). Fuente: [Nager.Date](https://date.nager.at), gratuita y sin API key.
+- **Nuevo starter:** `spring-boot-starter-restclient` (en Boot 4 ya no viene con el de Web MVC).
+- **Reglas de negocio:** no se reservan turnos en feriados (422) ni en horarios ocupados (409).
+- **Errores RFC 9457:** `GlobalExceptionHandler` devuelve `application/problem+json` con propiedades propias.
+- **Versionado:** header `API-Version`. `1.0` (por defecto) devuelve `fechaHora`; `2.0` devuelve `fecha` y `hora` por separado.
+- **Solución del ejercicio de la Clase 1:** `PATCH /api/turnos/{id}/cancelar` (409 si ya estaba cancelado) y filtro `?cliente=`.
 
 ## Ejecutar
 ```bash
-mvn spring-boot:run            # modo desarrollo
-mvn clean package              # genera el fat JAR en target/
-java -jar target/turnos-api-0.1.0.jar
-java -jar target/turnos-api-0.1.0.jar --server.port=9090   # override de propiedad
+mvn spring-boot:run
+mvn test        # FeriadosClient se mockea con @MockitoBean: no necesita internet
 ```
+Cambiá el país de los feriados en `application.properties` (`turnos.pais=AR`, `BR`, `MX`, `CO`...).
 
 ## Endpoints
-| Método | URI | Respuesta |
-|---|---|---|
-| GET | `/hola?nombre=X` | 200 |
-| GET | `/api/turnos` (`?estado=PENDIENTE` opcional) | 200 |
-| GET | `/api/turnos/{id}` | 200 / 404 |
-| POST | `/api/turnos` | 201 + `Location` |
-| PUT | `/api/turnos/{id}` | 200 / 404 |
-| DELETE | `/api/turnos/{id}` | 204 / 404 |
-
-Para probar: `http/turnos.http` (IntelliJ o VS Code REST Client) o `http/curl.sh`.
-
-## Estructura
-```
-controller/  HolaController, TurnoController   → capa HTTP
-service/     TurnoService                      → reglas de negocio
-repository/  TurnoRepository (interfaz)        → acceso a datos
-             InMemoryTurnoRepository           → hoy: ConcurrentHashMap
-model/       Turno (record), EstadoTurno (enum)
-dto/         TurnoRequest (record)             → lo que envía el cliente
-```
+| Método | URI | Éxito | Errores |
+|---|---|---|---|
+| GET | `/api/turnos` (`?estado=`, `?cliente=`) | 200 | 400 versión inválida |
+| GET | `/api/turnos/{id}` | 200 | 404 |
+| POST | `/api/turnos` | 201 | 400, 409, 422 |
+| PUT | `/api/turnos/{id}` | 200 | 404, 409, 422 |
+| PATCH | `/api/turnos/{id}/cancelar` | 200 | 404, 409 |
+| DELETE | `/api/turnos/{id}` | 204 | 404 |
 
 ## Ejercicio para la casa
-1. `PATCH /api/turnos/{id}/cancelar` → pasa el turno a `CANCELADO` (pista: `Turno.conEstado`). Devuelve 200, o 404 si no existe.
-2. `GET /api/turnos?cliente=Ana` → filtro por cliente (combinable con `estado`).
-3. Pensar: ¿qué status debería devolver cancelar un turno que ya está cancelado? Lo discutimos en la Parte 2.
+1. `GET /api/calendario/feriados?anio=2026` que exponga los feriados usando `FeriadosClient` (nuevo controller, sin tocar `TurnoController`).
+2. Rechazar turnos en fechas pasadas con un ProblemDetail 422 que incluya la propiedad `fechaHora`.
+3. Para pensar: hoy cada `POST` consulta la API de feriados. ¿Cómo lo evitarías? (Pista: los feriados de un año no cambian.)
 
 ## Cómo sigue
-- Parte 2: `RestClient`, `@HttpExchange`, errores con `ProblemDetail`, versionado de APIs.
-- Parte 3: validación, buenas prácticas, Virtual Threads, OpenAPI/Swagger y H2.
-- Persistencia: el `InMemoryTurnoRepository` se reemplaza por JdbcTemplate y Spring Data JPA.
+- Parte 3 (8/10): Bean Validation, buenas prácticas de diseño, Virtual Threads, AOT, Spring Modulith, OpenAPI/Swagger y H2.

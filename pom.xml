@@ -14,7 +14,7 @@
 
     <groupId>com.codigofacilito</groupId>
     <artifactId>turnos-api</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <name>turnos-api</name>
     <description>API de turnos - Bootcamp Backend con Java y Spring (Código Facilito)</description>
 
@@ -27,6 +27,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+
+        <!-- Boot 4: RestClient y los clientes @HttpExchange tienen su propio starter.
+             Sin esto no hay bean RestClient.Builder en runtime. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-restclient</artifactId>
         </dependency>
 
         <dependency>
