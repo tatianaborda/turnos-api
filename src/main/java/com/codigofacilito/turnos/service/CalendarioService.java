@@ -9,7 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class CalendarioService {
@@ -19,20 +22,27 @@ public class CalendarioService {
     private final FeriadosClient feriadosClient;
     private final String pais;
 
+    /**
+     * Solución del ejercicio 3 de la Parte 2: los feriados de un año no cambian,
+     * así que los guardamos después de la primera consulta.
+     * (Más adelante esto se reemplaza por @Cacheable y un proveedor de caché.)
+     */
+    private final Map<Integer, List<Feriado>> cache = new ConcurrentHashMap<>();
+
     public CalendarioService(FeriadosClient feriadosClient, @Value("${turnos.pais}") String pais) {
         this.feriadosClient = feriadosClient;
         this.pais = pais;
     }
 
-    /**
-     * Devuelve el feriado de esa fecha, si lo hay.
-     * Decisión de diseño "fail-open": si la API externa no responde,
-     * dejamos reservar igual en vez de tirar abajo nuestro servicio.
-     * (En Spring Cloud vemos circuit breakers para esto.)
-     */
+    /** Si la API externa falla, lanza RestClientException (el handler responde 502). */
+    public List<Feriado> feriadosDe(int anio) {
+        return cache.computeIfAbsent(anio, a -> feriadosClient.feriados(a, pais));
+    }
+
+    /** Fail-open: si la API externa no responde, se permite reservar igual. */
     public Optional<Feriado> feriadoEn(LocalDate fecha) {
         try {
-            return feriadosClient.feriados(fecha.getYear(), pais).stream()
+            return feriadosDe(fecha.getYear()).stream()
                     .filter(f -> f.date().equals(fecha))
                     .findFirst();
         } catch (RestClientException ex) {
