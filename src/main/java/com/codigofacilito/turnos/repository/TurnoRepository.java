@@ -2,6 +2,8 @@ package com.codigofacilito.turnos.repository;
 
 import com.codigofacilito.turnos.model.EstadoTurno;
 import com.codigofacilito.turnos.model.Turno;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -32,6 +34,16 @@ public interface TurnoRepository extends JpaRepository<Turno, Long> {
 
     // Lo mismo, sin contar al propio turno  (para actualizar)
     boolean existsByFechaHoraAndEstadoNotAndIdNot(LocalDateTime fechaHora, EstadoTurno estado, Long id);
+
+    // ---------- NUEVO (P2-LC3): las mismas consultas, paginadas ----------
+    // Con Pageable, Spring agrega LIMIT/OFFSET y ORDER BY, y además hace un COUNT
+    // para saber el total de elementos. (findAll(Pageable) ya viene en JpaRepository.)
+
+    Page<Turno> findByEstado(EstadoTurno estado, Pageable pageable);
+
+    Page<Turno> findByClienteContainingIgnoreCase(String cliente, Pageable pageable);
+
+    Page<Turno> findByEstadoAndClienteContainingIgnoreCase(EstadoTurno estado, String cliente, Pageable pageable);
 
     // ---------- NUEVO (P2-LC2): consulta escrita a mano con JPQL ----------
     // JPQL se parece a SQL, pero habla de entidades y atributos (Turno, fechaHora),

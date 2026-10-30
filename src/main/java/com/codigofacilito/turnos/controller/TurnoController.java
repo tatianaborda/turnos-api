@@ -1,5 +1,6 @@
 package com.codigofacilito.turnos.controller;
 
+import com.codigofacilito.turnos.dto.PaginaResponse;
 import com.codigofacilito.turnos.dto.TurnoRequest;
 import com.codigofacilito.turnos.dto.TurnoV2Response;
 import com.codigofacilito.turnos.model.EstadoTurno;
@@ -11,6 +12,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -77,6 +81,20 @@ public class TurnoController {
     @GetMapping(path = "/{id}", version = "2.0")
     public TurnoV2Response obtenerV2(@PathVariable Long id) {
         return TurnoV2Response.from(service.buscar(id));
+    }
+
+    // ---------- NUEVO (P2-LC3): versión 3.0, listado paginado ----------
+    // Paginar cambia la forma de la respuesta (de una lista a una página con datos extra),
+    // así que lo publicamos como versión nueva: los clientes de la 1.0 y la 2.0 no se rompen.
+    // Ejemplo: GET /api/turnos?page=0&size=2&sort=fechaHora,desc  con header API-Version: 3.0
+
+    @Operation(summary = "Lista turnos paginados (v3)", description = "Parámetros: page (desde 0), size y sort=campo,asc|desc")
+    @GetMapping(version = "3.0")
+    public PaginaResponse<TurnoV2Response> listarV3(
+            @RequestParam(required = false) EstadoTurno estado,
+            @RequestParam(required = false) String cliente,
+            @ParameterObject @PageableDefault(size = 20, sort = "fechaHora") Pageable pageable) {
+        return PaginaResponse.from(service.listarPaginado(estado, cliente, pageable), TurnoV2Response::from);
     }
 
     // ---------- NUEVO (P2-LC2): agenda de un día (consulta @Query) ----------

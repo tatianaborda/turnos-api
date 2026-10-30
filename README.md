@@ -1,32 +1,25 @@
-# turnos-api · Persistencia, Parte 1
+~~# turnos-api · Persistencia, Parte 2
 
 Proyecto del Bootcamp Backend con Java y Spring (Código Facilito).
-Estado al final de **Persistencia de Datos · Parte 1 (27/10/2026)**: el acceso a datos con JDBC tradicional y con JdbcTemplate, sobre una base H2 que guarda los datos en un archivo, con el pool de conexiones HikariCP configurado.
+Estado al final de **Persistencia de Datos · Parte 2 (29/10/2026)**: la API accede a la base con **Spring Data JPA**.
 
-## Novedades respecto de la clase 3
-- **Solución del ejercicio de la clase 3:** `@HorarioLaboral`, una anotación de validación propia (lunes a sábado, de 9 a 19 hs).
-- **Sin repositorio en memoria:** la API trabaja siempre contra la base de datos.
-- **JDBC tradicional (LC1):** el repositorio escrito con `Connection`, `PreparedStatement` y `ResultSet`, para ver el boilerplate.
-- **JdbcTemplate (LC2):** el mismo repositorio, con Spring encargándose de abrir y cerrar conexiones, recorrer resultados y traducir excepciones.
-- **DataSource y HikariCP (LC3):** H2 en modo archivo (`./data/turnos`), los datos sobreviven a los reinicios, y el pool de conexiones configurado y visible en el log.
+## Novedades respecto de Persistencia 1
+- **Solución del ejercicio de Persistencia 1:** `findByEstado` con un `WHERE` en el SQL.
+- **Entidad JPA (LC1):** `Turno` deja de ser un record y pasa a ser una clase con `@Entity`, `@Id`, `@GeneratedValue`, `@Column` y `@Enumerated`.
+- **JpaRepository (LC1):** `TurnoRepository` es solo una interfaz; Spring Data genera la implementación. Se borró `JdbcTemplateTurnoRepository`.
+- **Consultas (LC2):** consultas derivadas del nombre del método (`findByEstado`, `findByClienteContainingIgnoreCase`, `existsByFechaHoraAndEstadoNot`...), ordenamiento con `Sort` y una consulta JPQL con `@Query` para la agenda del día.
+- **Paginación (LC3):** `GET /api/turnos` con `API-Version: 3.0` devuelve una página (`page`, `size`, `sort`).
 
 ## Ejecutar
 ```bash
 mvn spring-boot:run
-mvn test        # los tests usan una base en memoria, no tocan ./data
+mvn test        # los tests usan una base en memoria
 ```
 
-| Qué | Dónde |
-|---|---|
-| Swagger UI | http://localhost:8080/swagger-ui.html |
-| Consola H2 | http://localhost:8080/h2-console (URL `jdbc:h2:file:./data/turnos`, usuario `sa`, sin password) |
+## Endpoints nuevos
+| Método | URI | Qué hace |
+|---|---|---|
+| GET | `/api/turnos/agenda?fecha=2030-03-04` | Turnos no cancelados de un día, ordenados por hora |
+| GET | `/api/turnos?page=0&size=2&sort=fechaHora,desc` + header `API-Version: 3.0` | Listado paginado |
 
-Para empezar con la base vacía de nuevo: frená la app y borrá la carpeta `data/`.
-
-## Ejercicio para la casa
-1. Agregar a `TurnoRepository` un método `List<Turno> findByEstado(EstadoTurno estado)` e implementarlo en `JdbcTemplateTurnoRepository` con un `WHERE` en el SQL. Usarlo en `TurnoService.listar` en vez de filtrar en memoria.
-2. Escribir `JdbcTemplateTurnoRepository.findAll()` con `NamedParameterJdbcTemplate` (parámetros con nombre, `:id`) y comparar con los `?`.
-3. Para pensar: ¿cuántas líneas tendría que escribir para agregar una tabla `cliente` con su propio CRUD? El jueves lo resolvemos con Spring Data JPA.
-
-## Cómo sigue
-- Persistencia 2 (29/10): Spring Data JPA, entidades, repositorios, consultas derivadas, `@Query` y paginación con `Pageable`.
+En la consola de IntelliJ se ve el SQL que genera Hibernate (`spring.jpa.show-sql=true`).
