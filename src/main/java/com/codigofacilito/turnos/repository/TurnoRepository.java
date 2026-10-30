@@ -2,21 +2,45 @@ package com.codigofacilito.turnos.repository;
 
 import com.codigofacilito.turnos.model.EstadoTurno;
 import com.codigofacilito.turnos.model.Turno;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * NUEVO (P2-LC1): el repositorio es solo una interfaz. No hay clase que la implemente:
- * Spring Data JPA la genera al arrancar.
- *
- * JpaRepository<Turno, Long> = repositorio de Turno, cuya clave primaria es Long.
- * Ya trae: findAll, findById, save, existsById, deleteById, count y muchos más.
- * (Son los mismos nombres que usábamos desde la clase 1: por eso el servicio casi no cambia.)
+ * El repositorio es solo una interfaz: Spring Data JPA genera la implementación.
+ * JpaRepository<Turno, Long> ya trae findAll, findById, save, existsById, deleteById, count...
  */
 public interface TurnoRepository extends JpaRepository<Turno, Long> {
 
-    // Consulta derivada: Spring arma el SQL a partir del nombre del método.
-    // findBy + Estado  ->  SELECT ... FROM turno WHERE estado = ?
-    List<Turno> findByEstado(EstadoTurno estado);
+    // ---------- NUEVO (P2-LC2): consultas derivadas del nombre del método ----------
+
+    // WHERE estado = ?   (el Sort agrega el ORDER BY)
+    List<Turno> findByEstado(EstadoTurno estado, Sort orden);
+
+    // WHERE UPPER(cliente) LIKE UPPER('%' || ? || '%')
+    List<Turno> findByClienteContainingIgnoreCase(String cliente, Sort orden);
+
+    // WHERE estado = ? AND UPPER(cliente) LIKE UPPER('%' || ? || '%')
+    List<Turno> findByEstadoAndClienteContainingIgnoreCase(EstadoTurno estado, String cliente, Sort orden);
+
+    // ¿Existe un turno en ese horario que no esté cancelado?  (para crear)
+    boolean existsByFechaHoraAndEstadoNot(LocalDateTime fechaHora, EstadoTurno estado);
+
+    // Lo mismo, sin contar al propio turno  (para actualizar)
+    boolean existsByFechaHoraAndEstadoNotAndIdNot(LocalDateTime fechaHora, EstadoTurno estado, Long id);
+
+    // ---------- NUEVO (P2-LC2): consulta escrita a mano con JPQL ----------
+    // JPQL se parece a SQL, pero habla de entidades y atributos (Turno, fechaHora),
+    // no de tablas y columnas (turno, fecha_hora).
+    @Query("""
+            SELECT t FROM Turno t
+            WHERE t.fechaHora >= :desde AND t.fechaHora < :hasta
+              AND t.estado <> com.codigofacilito.turnos.model.EstadoTurno.CANCELADO
+            ORDER BY t.fechaHora
+            """)
+    List<Turno> agendaEntre(@Param("desde") LocalDateTime desde, @Param("hasta") LocalDateTime hasta);
 }

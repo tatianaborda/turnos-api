@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -75,6 +77,14 @@ public class TurnoController {
     @GetMapping(path = "/{id}", version = "2.0")
     public TurnoV2Response obtenerV2(@PathVariable Long id) {
         return TurnoV2Response.from(service.buscar(id));
+    }
+
+    // ---------- NUEVO (P2-LC2): agenda de un día (consulta @Query) ----------
+
+    @Operation(summary = "Agenda de un día", description = "Turnos no cancelados de la fecha, ordenados por hora")
+    @GetMapping("/agenda")
+    public List<Turno> agenda(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
+        return service.agenda(fecha);
     }
 
     // ---------- Sin versión: aplican a todas ----------
