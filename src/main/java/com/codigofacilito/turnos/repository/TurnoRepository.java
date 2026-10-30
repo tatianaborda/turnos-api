@@ -1,5 +1,6 @@
 package com.codigofacilito.turnos.repository;
 
+import com.codigofacilito.turnos.model.EstadoTurno;
 import com.codigofacilito.turnos.model.Turno;
 
 import java.util.List;
@@ -14,6 +15,9 @@ import java.util.Optional;
 public interface TurnoRepository {
 
     List<Turno> findAll();
+
+    // NUEVO (ejercicio 1 de Persistencia 1): filtrar en la base con un WHERE, no en memoria
+    List<Turno> findByEstado(EstadoTurno estado);
 
     Optional<Turno> findById(Long id);
 

@@ -25,10 +25,11 @@ public class TurnoService {
         this.calendario = calendario;
     }
 
-    /** Filtros opcionales y combinables (solución del ejercicio 2 de la Parte 1). */
+    /** Filtros opcionales y combinables. */
     public List<Turno> listar(EstadoTurno estado, String cliente) {
-        return repository.findAll().stream()
-                .filter(t -> estado == null || t.estado() == estado)
+        // NUEVO (ejercicio 1 de Persistencia 1): si hay estado, la base ya trae solo esos turnos
+        List<Turno> turnos = estado == null ? repository.findAll() : repository.findByEstado(estado);
+        return turnos.stream()
                 .filter(t -> cliente == null || t.cliente().toLowerCase().contains(cliente.toLowerCase()))
                 .sorted(Comparator.comparing(Turno::fechaHora))
                 .toList();
