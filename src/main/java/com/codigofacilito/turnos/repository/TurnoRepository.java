@@ -2,28 +2,21 @@ package com.codigofacilito.turnos.repository;
 
 import com.codigofacilito.turnos.model.EstadoTurno;
 import com.codigofacilito.turnos.model.Turno;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
- * Contrato de acceso a datos.
- * Hoy lo implementamos en memoria; en el módulo de Persistencia
- * lo reemplazamos por JdbcTemplate y después por Spring Data JPA
- * sin tocar el controller.
+ * NUEVO (P2-LC1): el repositorio es solo una interfaz. No hay clase que la implemente:
+ * Spring Data JPA la genera al arrancar.
+ *
+ * JpaRepository<Turno, Long> = repositorio de Turno, cuya clave primaria es Long.
+ * Ya trae: findAll, findById, save, existsById, deleteById, count y muchos más.
+ * (Son los mismos nombres que usábamos desde la clase 1: por eso el servicio casi no cambia.)
  */
-public interface TurnoRepository {
+public interface TurnoRepository extends JpaRepository<Turno, Long> {
 
-    List<Turno> findAll();
-
-    // NUEVO (ejercicio 1 de Persistencia 1): filtrar en la base con un WHERE, no en memoria
+    // Consulta derivada: Spring arma el SQL a partir del nombre del método.
+    // findBy + Estado  ->  SELECT ... FROM turno WHERE estado = ?
     List<Turno> findByEstado(EstadoTurno estado);
-
-    Optional<Turno> findById(Long id);
-
-    Turno save(Turno turno);
-
-    boolean existsById(Long id);
-
-    void deleteById(Long id);
 }

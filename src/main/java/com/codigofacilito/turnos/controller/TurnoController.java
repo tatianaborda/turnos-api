@@ -92,7 +92,7 @@ public class TurnoController {
         Turno creado = service.crear(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(creado.id())
+                .buildAndExpand(creado.getId())
                 .toUri();
         return ResponseEntity.created(location).body(creado);
     }

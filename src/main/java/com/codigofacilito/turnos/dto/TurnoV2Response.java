@@ -19,7 +19,7 @@ public record TurnoV2Response(
         EstadoTurno estado
 ) {
     public static TurnoV2Response from(Turno turno) {
-        return new TurnoV2Response(turno.id(), turno.cliente(), turno.servicio(),
-                turno.fechaHora().toLocalDate(), turno.fechaHora().toLocalTime(), turno.estado());
+        return new TurnoV2Response(turno.getId(), turno.getCliente(), turno.getServicio(),
+                turno.getFechaHora().toLocalDate(), turno.getFechaHora().toLocalTime(), turno.getEstado());
     }
 }

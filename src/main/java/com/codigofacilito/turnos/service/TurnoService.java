@@ -27,11 +27,11 @@ public class TurnoService {
 
     /** Filtros opcionales y combinables. */
     public List<Turno> listar(EstadoTurno estado, String cliente) {
-        // NUEVO (ejercicio 1 de Persistencia 1): si hay estado, la base ya trae solo esos turnos
+        // Si hay estado, la base ya trae solo esos turnos (ahora con una consulta derivada)
         List<Turno> turnos = estado == null ? repository.findAll() : repository.findByEstado(estado);
         return turnos.stream()
-                .filter(t -> cliente == null || t.cliente().toLowerCase().contains(cliente.toLowerCase()))
-                .sorted(Comparator.comparing(Turno::fechaHora))
+                .filter(t -> cliente == null || t.getCliente().toLowerCase().contains(cliente.toLowerCase()))
+                .sorted(Comparator.comparing(Turno::getFechaHora))
                 .toList();
     }
 
@@ -43,25 +43,27 @@ public class TurnoService {
 
     public Turno crear(TurnoRequest request) {
         validarDisponibilidad(request.fechaHora(), null);
-        Turno nuevo = new Turno(null, request.cliente(), request.servicio(),
-                request.fechaHora(), EstadoTurno.PENDIENTE);
-        return repository.save(nuevo);
+        // NUEVO: el constructor de la entidad arranca el turno en PENDIENTE
+        Turno nuevo = new Turno(request.cliente(), request.servicio(), request.fechaHora());
+        return repository.save(nuevo); // JPA hace el INSERT y le asigna el id
     }
 
     public Turno actualizar(Long id, TurnoRequest request) {
         Turno actual = buscar(id);
         validarDisponibilidad(request.fechaHora(), id);
-        return repository.save(new Turno(id, request.cliente(), request.servicio(),
-                request.fechaHora(), actual.estado()));
+        // NUEVO: modificamos la entidad que trajimos y la guardamos (JPA hace el UPDATE)
+        actual.actualizar(request.cliente(), request.servicio(), request.fechaHora());
+        return repository.save(actual);
     }
 
     /** Solución del ejercicio 1 de la Parte 1: cancelar dos veces es un conflicto (409). */
     public Turno cancelar(Long id) {
         Turno actual = buscar(id);
-        if (actual.estado() == EstadoTurno.CANCELADO) {
+        if (actual.getEstado() == EstadoTurno.CANCELADO) {
             throw new TurnoYaCanceladoException(id);
         }
-        return repository.save(actual.conEstado(EstadoTurno.CANCELADO));
+        actual.cancelar();
+        return repository.save(actual);
     }
 
     public void eliminar(Long id) {
@@ -76,9 +78,9 @@ public class TurnoService {
             throw new FechaFeriadoException(feriado);
         });
         boolean ocupado = repository.findAll().stream()
-                .anyMatch(t -> t.fechaHora().equals(fechaHora)
-                        && t.estado() != EstadoTurno.CANCELADO
-                        && !t.id().equals(idPropio));
+                .anyMatch(t -> t.getFechaHora().equals(fechaHora)
+                        && t.getEstado() != EstadoTurno.CANCELADO
+                        && !t.getId().equals(idPropio));
         if (ocupado) {
             throw new HorarioOcupadoException(fechaHora);
         }
